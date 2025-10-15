@@ -1,6 +1,6 @@
 ## GUI
 
-大致写了个部署的步骤。<部署GUI环境.md>
+大致写了个部署的步骤。[部署GUI环境.md](https://github.com/szxzip/data/blob/main/%E9%83%A8%E7%BD%B2GUI%E7%8E%AF%E5%A2%83.md)
 
 ## 内容
 
