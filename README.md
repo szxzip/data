@@ -1,8 +1,6 @@
 ## GUI
 
-gtk文档：<https://www.gtk.org/docs/installations/windows/>
-
-目前win环境还有问题，gtk.h检测不到无法编译。待再试。
+大致写了个部署的步骤。<部署GUI环境.md>
 
 ## 内容
 
