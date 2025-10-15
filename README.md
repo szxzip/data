@@ -19,7 +19,7 @@
 
 #### 四
 
-## 部署GUI，以及编译
+## 部署 GUI，以及编译
 
 基本上是 [gtk 文档](https://www.gtk.org/docs/installations/windows/)里面的步骤。
 
@@ -47,7 +47,7 @@
    cd X:/path/to/codes
    ```
    
-   `cd` = change directory。`X:` 意思是盘符，比如 C 盘。路径分隔符是 `/` 不是 `\`，`/` 是 linux的 ，`\` 是 win 的，不一样。
+   `cd` = change directory。`X:` 意思是盘符，比如 C 盘。路径分隔符是 `/` 不是 `\`。（linux 和 win 不一样）
    
    比如
    
