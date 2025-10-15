@@ -54,5 +54,3 @@
    ```
    
    `gcc` 是 C 语言编译工具。`-o run.exe` 代表输出的可执行文件。`*.c` 编译所有 .c 文件。`pkg-config --cflags --libs gtk+-3.0` 是把 gtk3 加进去。
-
-8. 运行 run.exe。（但愿不要有乱码，在win上很常见）
