@@ -27,13 +27,19 @@
 
 2. 打开 MSYS2 **UCRT64**。（有好几个环境，ucrt64 更常用些。下面的命令都是在这个环境里执行）
 
-3. [gtk 文档](https://www.gtk.org/docs/installations/windows/)第二步，安装 **gtk3**，不是 gtk4。（gtk4 我还没试过）
+3. 安装 gtk3。
 
-4. [gtk 文档](https://www.gtk.org/docs/installations/windows/)第三步，安装 C 语言编译工具。
+   ```
+   pacman -S mingw-w64-ucrt-x86_64-gtk3
+   ```
 
-5. 文档下面的不用装了，基本上就是主题包。
+4. 安装 C 语言编译工具。
 
-6. 切换到项目的目录。命令：
+   ```
+   pacman -S mingw-w64-ucrt-x86_64-toolchain base-devel
+   ```
+
+5. 切换到项目的目录。命令：
    
    ```
    cd X:/path/to/codes
@@ -47,7 +53,7 @@
    cd C:/users/me/Desktop/data/data1
    ```
    
-7. 编译命令：
+6. 编译命令：
 
    ```
    gcc -o run.exe *.c `pkg-config --cflags --libs gtk+-3.0` -mwindows
