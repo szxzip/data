@@ -32,4 +32,4 @@
    gcc -o run.exe *.c `pkg-config --cflags --libs gtk+-3.0` -mwindows
    ```
    
-   `gcc` 是 C 语言编译工具。`-o run.exe` 代表输出的可执行文件。`*.c` 编译所有 .c 文件。`--cflags --libs gtk+-3.0` 是把 gtk 加进去。
+   `gcc` 是 C 语言编译工具。`-o run.exe` 代表输出的可执行文件。`*.c` 编译所有 .c 文件。`pkg-config --cflags --libs gtk+-3.0` 是把 gtk3 加进去。
