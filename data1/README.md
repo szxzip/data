@@ -1,13 +1,3 @@
-## GUI
-
-gtk文档：<https://www.gtk.org/docs/installations/windows/>
-
-目前win环境还有问题，gtk.h检测不到无法编译。待再试。
-
-## 内容
-
-### 一
-
 **7. 学生成绩管理**
 
 【问题描述】  
@@ -18,10 +8,3 @@ gtk文档：<https://www.gtk.org/docs/installations/windows/>
 （1）采用顺序表登录学生成绩。  
 （2）可以登记、查询、插入、删除学生成绩。  
 （3）将成绩按科目存储到链表中。
-
-### 二
-
-### 三
-
-### 四
-
