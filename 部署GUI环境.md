@@ -18,7 +18,7 @@
    cd X:/path/to/codes
    ```
    
-   `cd` = change directory。X 意思是盘符，比如 C 盘。要注意是 `/` 不是 `\\`，`/` 是 linux 路径分隔符，`\\` 是 win 的，不一样。
+   `cd` = change directory。`X:` 意思是盘符，比如 C 盘。要注意是 `/` 不是 `\\`，`/` 是 linux 路径分隔符，`\\` 是 win 的，不一样。
    
    比如
    
