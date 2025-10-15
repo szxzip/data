@@ -27,7 +27,7 @@
 
 1. 安装 [msys2](https://www.msys2.org/)。（用来创建一个 linux 环境）
 
-2. 打开 MSYS2 **UCRT64**。（有好几个环境，ucrt64 更常用些。）
+2. 打开 MSYS2 **UCRT64**。（有好几个环境，ucrt64 更常用些）
 
 （下面都是在这个环境里执行）
 
@@ -63,4 +63,4 @@
    gcc -o run.exe *.c `pkg-config --cflags --libs gtk+-3.0` -mwindows
    ```
    
-   `gcc` 是 C 语言编译工具。`-o run.exe` 代表输出的可执行文件。`*.c` 编译所有 .c 文件。`pkg-config --cflags --libs gtk+-3.0` 是把 gtk3 加进去。
+   `gcc` 是 C 语言编译工具。`-o run.exe` 代表输出的可执行文件。`*.c` 编译所有 .c 文件。`pkg-config --cflags --libs gtk+-3.0` 把 gtk 加进去。
