@@ -4,7 +4,7 @@
 
 1. 安装 [msys2](https://www.msys2.org/)。（用来创建一个 linux 环境）
 
-2. 打开 MSYS2 **UCRT64**。（一个 linux 环境，下面的命令都是在这个环境里执行）
+2. 打开 MSYS2 **UCRT64**。（有好几个环境，ucrt64 更常用些。下面的命令都是在这个环境里执行）
 
 3. 按照 [gtk 文档](https://www.gtk.org/docs/installations/windows/) 第二步，安装 **gtk3**，不是 gtk4。（gtk4 好像有一些奇怪的问题，特别是在 win 上）。
 
