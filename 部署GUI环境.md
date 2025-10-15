@@ -18,7 +18,7 @@
    cd X:/path/to/codes
    ```
    
-   cd = change directory。X 意思是盘符，比如 C 盘。要注意是 **/** 不是 **\\**，/ 是 linux 路径分隔符，\ 是 win 的，不一样。
+   `cd` = change directory。X 意思是盘符，比如 C 盘。要注意是 `/` 不是 `\\`，`/` 是 linux 路径分隔符，`\\` 是 win 的，不一样。
    
    比如
    
@@ -32,4 +32,4 @@
    gcc -o run.exe *.c `pkg-config --cflags --libs gtk+-3.0` -mwindows
    ```
    
-   gcc 是 C 语言编译工具。-o run.exe 代表输出的可执行文件。*.c 编译所有 .c 文件。然后是把 gtk 加进去。
+   `gcc` 是 C 语言编译工具。`-o run.exe` 代表输出的可执行文件。`*.c` 编译所有 .c 文件。`--cflags --libs gtk+-3.0` 是把 gtk 加进去。
