@@ -25,7 +25,9 @@
 
 1. 安装 [msys2](https://www.msys2.org/)。（用来创建一个 linux 环境）
 
-2. 打开 MSYS2 **UCRT64**。（有好几个环境，ucrt64 更常用些。下面的命令都是在这个环境里执行）
+2. 打开 MSYS2 **UCRT64**。（有好几个环境，ucrt64 更常用些。）
+
+下面的命令都是在这个环境里执行。
 
 3. 安装 gtk3。
 
@@ -39,7 +41,7 @@
    pacman -S mingw-w64-ucrt-x86_64-toolchain base-devel
    ```
 
-5. 切换到项目的目录。命令：
+5. 切换到项目的目录。
    
    ```
    cd X:/path/to/codes
@@ -53,7 +55,7 @@
    cd C:/users/me/Desktop/data/data1
    ```
    
-6. 编译命令：
+6. 编译。
 
    ```
    gcc -o run.exe *.c `pkg-config --cflags --libs gtk+-3.0` -mwindows
