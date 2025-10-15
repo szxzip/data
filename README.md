@@ -19,7 +19,7 @@
 
 ### 四
 
-## GUI
+## 部署GUI，以及编译
 
 基本上是 [gtk 文档](https://www.gtk.org/docs/installations/windows/)里面的步骤。
 
