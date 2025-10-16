@@ -23,7 +23,7 @@
 
 ## 部署 GUI，以及编译
 
-基本上是 [gtk 文档](https://www.gtk.org/docs/installations/windows/)里面的步骤。
+（基本上是 [gtk 文档](https://www.gtk.org/docs/installations/windows/)里面的步骤）
 
 1. 安装 [msys2](https://www.msys2.org/)。（用来创建一个 linux 环境）
 
