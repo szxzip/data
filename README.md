@@ -49,7 +49,7 @@
    cd X:/path/to/codes
    ```
    
-   `cd` = change directory。`X:` 意思是盘符，比如 C 盘。路径分隔符是 `/` 不是 `\`（linux 和 win 不一样）。
+   `cd` = change directory。`X:` 意思是盘符，比如 C 盘。`/` 用来代替 `\`（linux 和 win 的路径分隔符不一样）。
    
    比如
    
