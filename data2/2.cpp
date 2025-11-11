@@ -1,49 +1,56 @@
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <ctype.h>
 #include <string.h>
 #define MAX_SIZE 100
 typedef struct {
     int data[MAX_SIZE];
     int top;
 } Stack;
-void initStack(Stack* s) {
+void initStack(Stack* s)
+{
     s->top = -1;
 }
-int isEmpty(Stack* s) {
+int isEmpty(Stack* s)
+{
     if (s->top == -1) {
-        printf("¿ÕµÄ\n");
+        printf("ç©ºçš„\n");
         return 1;
     }
 }
-int push(Stack* s, int value) {
+int push(Stack* s, int value)
+{
     if (s->top >= MAX_SIZE - 1) {
-        printf("ÂúÁË\n");
-        return  0;
+        printf("æ»¡äº†\n");
+        return 0;
     }
     s->top++;
     s->data[s->top] = value;
-    return  1;
+    return 1;
 }
-int pop(Stack* s) {
+int pop(Stack* s)
+{
     if (isEmpty(s)) {
-        printf("Õ»Îª¿Õ£¡\n");
+        printf("æ ˆä¸ºç©ºï¼\n");
         return -1;
     }
     return s->data[(s->top)--];
 }
-int gettop(Stack* s) {
+int gettop(Stack* s)
+{
     if (s->top == -1) {
-        printf("¿ÕµÄ\n");
+        printf("ç©ºçš„\n");
         return 0;
-   }
-    return  s->data[s->top];
-    return  1;
+    }
+    return s->data[s->top];
+    return 1;
 }
-int isOperator(char c) {
+int isOperator(char c)
+{
     return c == '+' || c == '-' || c == '*' || c == '/';
 }
-int getPriority(char op) {
+int getPriority(char op)
+{
     switch (op) {
     case '+':
     case '-':
@@ -55,63 +62,62 @@ int getPriority(char op) {
         return 0;
     }
 }
-int safeIsDigit(char c) {
-    // ½«×Ö·û×ª»»ÎªÎŞ·ûºÅ×Ö·ûÒÔ±ÜÃâ¸ºÊıÎÊÌâ
+int safeIsDigit(char c)
+{
+    // å°†å­—ç¬¦è½¬æ¢ä¸ºæ— ç¬¦å·å­—ç¬¦ä»¥é¿å…è´Ÿæ•°é—®é¢˜
     return isdigit((unsigned char)c);
 }
-void infixToPostfix(char* infix, char* postfix) {
-    Stack opStack;  // ÔËËã·ûÕ»
+void infixToPostfix(char* infix, char* postfix)
+{
+    Stack opStack; // è¿ç®—ç¬¦æ ˆ
     initStack(&opStack);
     int i = 0, j = 0;
     char c;
     while (infix[i] != '\0') {
         c = infix[i];
 
-        // Ìø¹ı¿Õ¸ñ
+        // è·³è¿‡ç©ºæ ¼
         if (c == ' ') {
             i++;
             continue;
         }
 
-        // Èç¹ûÊÇÊı×Ö£¬Ö±½ÓÊä³öµ½ºó×º±í´ïÊ½
+        // å¦‚æœæ˜¯æ•°å­—ï¼Œç›´æ¥è¾“å‡ºåˆ°åç¼€è¡¨è¾¾å¼
         if (safeIsDigit(c)) {
             while (safeIsDigit(infix[i])) {
                 postfix[j++] = infix[i++];
             }
-            postfix[j++] = ' ';  // ÓÃ¿Õ¸ñ·Ö¸ôÊı×Ö
+            postfix[j++] = ' '; // ç”¨ç©ºæ ¼åˆ†éš”æ•°å­—
             continue;
         }
 
-        // Èç¹ûÊÇ×óÀ¨ºÅ£¬Ö±½ÓÈëÕ»
-        if (c== '(') {
+        // å¦‚æœæ˜¯å·¦æ‹¬å·ï¼Œç›´æ¥å…¥æ ˆ
+        if (c == '(') {
             push(&opStack, c);
             i++;
             continue;
         }
 
-        // Èç¹ûÊÇÓÒÀ¨ºÅ£¬µ¯³öÕ»ÖĞÔªËØÖ±µ½Óöµ½×óÀ¨ºÅ
+        // å¦‚æœæ˜¯å³æ‹¬å·ï¼Œå¼¹å‡ºæ ˆä¸­å…ƒç´ ç›´åˆ°é‡åˆ°å·¦æ‹¬å·
         if (c == ')') {
             while (!isEmpty(&opStack) && gettop(&opStack) != '(') {
                 postfix[j++] = pop(&opStack);
                 postfix[j++] = ' ';
             }
             if (!isEmpty(&opStack) && gettop(&opStack) == '(') {
-                pop(&opStack);  // µ¯³ö×óÀ¨ºÅ
-            }
-            else {
-                printf("´íÎó£ºÀ¨ºÅ²»Æ¥Åä£¡\n");
+                pop(&opStack); // å¼¹å‡ºå·¦æ‹¬å·
+            } else {
+                printf("é”™è¯¯ï¼šæ‹¬å·ä¸åŒ¹é…ï¼\n");
                 return;
             }
             i++;
             continue;
         }
 
-        // Èç¹ûÊÇÔËËã·û
+        // å¦‚æœæ˜¯è¿ç®—ç¬¦
         if (isOperator(c)) {
-            // µ¯³öÓÅÏÈ¼¶¸ü¸ß»òÏàµÈµÄÔËËã·û
-            while (!isEmpty(&opStack) &&
-                getPriority(gettop(&opStack)) >= getPriority(c) &&
-                gettop(&opStack) != '(') {
+            // å¼¹å‡ºä¼˜å…ˆçº§æ›´é«˜æˆ–ç›¸ç­‰çš„è¿ç®—ç¬¦
+            while (!isEmpty(&opStack) && getPriority(gettop(&opStack)) >= getPriority(c) && gettop(&opStack) != '(') {
                 postfix[j++] = pop(&opStack);
                 postfix[j++] = ' ';
             }
@@ -120,23 +126,24 @@ void infixToPostfix(char* infix, char* postfix) {
             continue;
         }
 
-        // Èç¹ûÓöµ½Î´Öª×Ö·û
-        printf("´íÎó£ºÓöµ½Î´Öª×Ö·û '%c'\n", c);
+        // å¦‚æœé‡åˆ°æœªçŸ¥å­—ç¬¦
+        printf("é”™è¯¯ï¼šé‡åˆ°æœªçŸ¥å­—ç¬¦ '%c'\n", c);
         i++;
     }
 
-    // µ¯³öÕ»ÖĞËùÓĞÊ£ÓàÔËËã·û
+    // å¼¹å‡ºæ ˆä¸­æ‰€æœ‰å‰©ä½™è¿ç®—ç¬¦
     while (!isEmpty(&opStack)) {
         postfix[j++] = pop(&opStack);
         postfix[j++] = ' ';
     }
 
-    postfix[j] = '\0';  // Ìí¼Ó×Ö·û´®½áÊø·û
+    postfix[j] = '\0'; // æ·»åŠ å­—ç¬¦ä¸²ç»“æŸç¬¦
 }
 
-// ¼ÆËãºó×º±í´ïÊ½
-int evaluatePostfix(char* postfix) {
-    Stack numStack;  // ²Ù×÷ÊıÕ»
+// è®¡ç®—åç¼€è¡¨è¾¾å¼
+int evaluatePostfix(char* postfix)
+{
+    Stack numStack; // æ“ä½œæ•°æ ˆ
     initStack(&numStack);
 
     int i = 0;
@@ -145,13 +152,13 @@ int evaluatePostfix(char* postfix) {
     while (postfix[i] != '\0') {
         c = postfix[i];
 
-        // Ìø¹ı¿Õ¸ñ
+        // è·³è¿‡ç©ºæ ¼
         if (c == ' ') {
             i++;
             continue;
         }
 
-        // Èç¹ûÊÇÊı×Ö£¬½âÎöÕû¸öÊı×Ö²¢ÈëÕ»
+        // å¦‚æœæ˜¯æ•°å­—ï¼Œè§£ææ•´ä¸ªæ•°å­—å¹¶å…¥æ ˆ
         if (safeIsDigit(c)) {
             int num = 0;
             while (safeIsDigit(postfix[i])) {
@@ -162,15 +169,15 @@ int evaluatePostfix(char* postfix) {
             continue;
         }
 
-        // Èç¹ûÊÇÔËËã·û£¬µ¯³öÁ½¸ö²Ù×÷Êı½øĞĞ¼ÆËã
+        // å¦‚æœæ˜¯è¿ç®—ç¬¦ï¼Œå¼¹å‡ºä¸¤ä¸ªæ“ä½œæ•°è¿›è¡Œè®¡ç®—
         if (isOperator(c)) {
             if (isEmpty(&numStack)) {
-                printf("´íÎó£º±í´ïÊ½²»ºÏ·¨£¡\n");
+                printf("é”™è¯¯ï¼šè¡¨è¾¾å¼ä¸åˆæ³•ï¼\n");
                 return -1;
             }
             int b = pop(&numStack);
             if (isEmpty(&numStack)) {
-                printf("´íÎó£º±í´ïÊ½²»ºÏ·¨£¡\n");
+                printf("é”™è¯¯ï¼šè¡¨è¾¾å¼ä¸åˆæ³•ï¼\n");
                 return -1;
             }
             int a = pop(&numStack);
@@ -188,13 +195,13 @@ int evaluatePostfix(char* postfix) {
                 break;
             case '/':
                 if (b == 0) {
-                    printf("´íÎó£º³ıÊı²»ÄÜÎªÁã£¡\n");
+                    printf("é”™è¯¯ï¼šé™¤æ•°ä¸èƒ½ä¸ºé›¶ï¼\n");
                     return -1;
                 }
                 result = a / b;
                 break;
             default:
-                printf("´íÎó£ºÎ´ÖªÔËËã·û£¡\n");
+                printf("é”™è¯¯ï¼šæœªçŸ¥è¿ç®—ç¬¦ï¼\n");
                 return -1;
             }
 
@@ -203,91 +210,94 @@ int evaluatePostfix(char* postfix) {
             continue;
         }
 
-        i++;  // ´¦ÀíÏÂÒ»¸ö×Ö·û
+        i++; // å¤„ç†ä¸‹ä¸€ä¸ªå­—ç¬¦
     }
 
     if (isEmpty(&numStack)) {
-        printf("´íÎó£º±í´ïÊ½Îª¿Õ£¡\n");
+        printf("é”™è¯¯ï¼šè¡¨è¾¾å¼ä¸ºç©ºï¼\n");
         return -1;
     }
 
     int result = pop(&numStack);
 
-    // ¼ì²éÕ»ÖĞÊÇ·ñ»¹ÓĞ¶àÓàµÄ²Ù×÷Êı
+    // æ£€æŸ¥æ ˆä¸­æ˜¯å¦è¿˜æœ‰å¤šä½™çš„æ“ä½œæ•°
     if (!isEmpty(&numStack)) {
-        printf("´íÎó£º±í´ïÊ½²»ÍêÕû£¡\n");
+        printf("é”™è¯¯ï¼šè¡¨è¾¾å¼ä¸å®Œæ•´ï¼\n");
         return -1;
     }
 
     return result;
 }
 
-// ÊäÈëÑéÖ¤º¯Êı
-int isValidExpression(char* string) {
+// è¾“å…¥éªŒè¯å‡½æ•°
+int isValidExpression(char* string)
+{
     int len = strlen(string);
     int parenthesis = 0;
 
     for (int i = 0; i < len; i++) {
         char c = string[i];
 
-        // ÔÊĞíµÄ×Ö·û£ºÊı×Ö¡¢ÔËËã·û¡¢À¨ºÅ¡¢¿Õ¸ñ
-        if (!safeIsDigit(c) && !isOperator(c) &&
-            c != '(' && c != ')' && c != ' ') {
-            printf("´íÎó£º°üº¬·Ç·¨×Ö·û '%c'\n", c);
+        // å…è®¸çš„å­—ç¬¦ï¼šæ•°å­—ã€è¿ç®—ç¬¦ã€æ‹¬å·ã€ç©ºæ ¼
+        if (!safeIsDigit(c) && !isOperator(c) && c != '(' && c != ')' && c != ' ') {
+            printf("é”™è¯¯ï¼šåŒ…å«éæ³•å­—ç¬¦ '%c'\n", c);
             return 0;
         }
 
-        // ¼ì²éÀ¨ºÅÆ¥Åä
-        if (c == '(') parenthesis++;
-        if (c == ')') parenthesis--;
+        // æ£€æŸ¥æ‹¬å·åŒ¹é…
+        if (c == '(')
+            parenthesis++;
+        if (c == ')')
+            parenthesis--;
 
         if (parenthesis < 0) {
-            printf("´íÎó£ºÀ¨ºÅ²»Æ¥Åä£¡\n");
+            printf("é”™è¯¯ï¼šæ‹¬å·ä¸åŒ¹é…ï¼\n");
             return 0;
         }
     }
 
     if (parenthesis != 0) {
-        printf("´íÎó£ºÀ¨ºÅ²»Æ¥Åä£¡\n");
+        printf("é”™è¯¯ï¼šæ‹¬å·ä¸åŒ¹é…ï¼\n");
         return 0;
     }
 
     return 1;
 }
 
-// Ö÷º¯Êı
-int main() {
+// ä¸»å‡½æ•°
+int main()
+{
     char infix[MAX_SIZE];
-    char postfix[MAX_SIZE * 2];  // ºó×º±í´ïÊ½¿ÉÄÜ¸ü³¤
+    char postfix[MAX_SIZE * 2]; // åç¼€è¡¨è¾¾å¼å¯èƒ½æ›´é•¿
 
-    printf("ËãÊõ±í´ïÊ½ÇóÖµ³ÌĞò\n");
+    printf("ç®—æœ¯è¡¨è¾¾å¼æ±‚å€¼ç¨‹åº\n");
     printf("==================\n");
-    printf("ÇëÊäÈëËãÊõ±í´ïÊ½£¨Ö§³Ö+¡¢-¡¢*¡¢/ºÍÀ¨ºÅ£©£º\n");
+    printf("è¯·è¾“å…¥ç®—æœ¯è¡¨è¾¾å¼ï¼ˆæ”¯æŒ+ã€-ã€*ã€/å’Œæ‹¬å·ï¼‰ï¼š\n");
 
-    // ¶ÁÈ¡ÊäÈë
+    // è¯»å–è¾“å…¥
     if (fgets(infix, sizeof(infix), stdin) == NULL) {
-        printf("¶ÁÈ¡ÊäÈëÊ§°Ü£¡\n");
+        printf("è¯»å–è¾“å…¥å¤±è´¥ï¼\n");
         return 1;
     }
 
-    // ÒÆ³ı»»ĞĞ·û
+    // ç§»é™¤æ¢è¡Œç¬¦
     infix[strcspn(infix, "\n")] = 0;
 
-    // ÑéÖ¤ÊäÈë±í´ïÊ½
+    // éªŒè¯è¾“å…¥è¡¨è¾¾å¼
     if (!isValidExpression(infix)) {
         return 1;
     }
 
-    printf("\nÊäÈëµÄÖĞ×º±í´ïÊ½£º%s\n", infix);
+    printf("\nè¾“å…¥çš„ä¸­ç¼€è¡¨è¾¾å¼ï¼š%s\n", infix);
 
-    // ×ª»»Îªºó×º±í´ïÊ½
+    // è½¬æ¢ä¸ºåç¼€è¡¨è¾¾å¼
     infixToPostfix(infix, postfix);
-    printf("×ª»»µÄºó×º±í´ïÊ½£º%s\n", postfix);
+    printf("è½¬æ¢çš„åç¼€è¡¨è¾¾å¼ï¼š%s\n", postfix);
 
-    // ¼ÆËãºó×º±í´ïÊ½
+    // è®¡ç®—åç¼€è¡¨è¾¾å¼
     int result = evaluatePostfix(postfix);
     if (result != -1) {
-        printf("¼ÆËã½á¹û£º%d\n", result);
+        printf("è®¡ç®—ç»“æœï¼š%d\n", result);
     }
 
     return 0;
