@@ -21,14 +21,13 @@ typedef struct {
     double average_search_length;
 } HashTable;
 
-// 全局变量
 HashTable* phone_table = NULL;
 GtkWidget* window;
 GtkWidget *name_entry, *phone_entry, *search_entry;
 GtkWidget* result_text;
 GtkWidget* asl_label;
 
-// 哈希函数 - 使用字符串哈希
+// 字符串哈希
 unsigned int hash_function(const char* phone)
 {
     unsigned int hash = 0;
@@ -49,7 +48,7 @@ HashTable* create_hash_table()
     return table;
 }
 
-// 插入数据到哈希表
+// 插入数据
 int hash_table_insert(HashTable* table, const char* name, const char* phone)
 {
     if (table->count >= table->size) {
@@ -77,7 +76,7 @@ int hash_table_insert(HashTable* table, const char* name, const char* phone)
     return 0;
 }
 
-// 在哈希表中查找
+// 查找
 HashNode* hash_table_search(HashTable* table, const char* phone, int* search_steps)
 {
     unsigned int index = hash_function(phone);
@@ -122,7 +121,7 @@ void calculate_average_search_length(HashTable* table)
     table->average_search_length = total_steps / total_searches;
 }
 
-// 显示哈希表内容
+// 显示哈希表
 void display_hash_table(HashTable* table, GtkTextBuffer* buffer)
 {
     gtk_text_buffer_set_text(buffer, "哈希表内容:\n\n", -1);
@@ -169,7 +168,7 @@ void display_hash_table(HashTable* table, GtkTextBuffer* buffer)
     gtk_text_buffer_insert(buffer, &iter, buffer_text, -1);
 }
 
-// GTK回调函数
+// GUI
 void on_insert_clicked(GtkWidget* widget, gpointer data)
 {
     const char* name = gtk_entry_get_text(GTK_ENTRY(name_entry));
@@ -267,16 +266,13 @@ void on_clear_clicked(GtkWidget* widget, gpointer data)
     gtk_entry_set_text(GTK_ENTRY(search_entry), "");
 }
 
-// 创建GUI界面
 void create_gui()
 {
-    // 创建主窗口
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(window), "学生手机号哈希表管理系统");
     gtk_window_set_default_size(GTK_WINDOW(window), 800, 600);
     gtk_container_set_border_width(GTK_CONTAINER(window), 10);
 
-    // 创建主垂直盒子
     GtkWidget* vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
     gtk_container_add(GTK_CONTAINER(window), vbox);
 
@@ -287,7 +283,7 @@ void create_gui()
     pango_font_description_free(font_desc);
     gtk_box_pack_start(GTK_BOX(vbox), title_label, FALSE, FALSE, 0);
 
-    // 平均查找长度显示
+    // 平均查找长度
     asl_label = gtk_label_new("当前平均查找长度: 0.000");
     gtk_box_pack_start(GTK_BOX(vbox), asl_label, FALSE, FALSE, 0);
 
@@ -295,7 +291,7 @@ void create_gui()
     GtkWidget* separator1 = gtk_separator_new(GTK_ORIENTATION_HORIZONTAL);
     gtk_box_pack_start(GTK_BOX(vbox), separator1, FALSE, FALSE, 5);
 
-    // 插入数据区域
+    // 插入
     GtkWidget* insert_frame = gtk_frame_new("插入学生信息");
     gtk_box_pack_start(GTK_BOX(vbox), insert_frame, FALSE, FALSE, 0);
 
@@ -318,7 +314,7 @@ void create_gui()
     GtkWidget* insert_button = gtk_button_new_with_label("插入");
     gtk_grid_attach(GTK_GRID(insert_grid), insert_button, 2, 0, 1, 2);
 
-    // 查找区域
+    // 查找
     GtkWidget* search_frame = gtk_frame_new("查找学生信息");
     gtk_box_pack_start(GTK_BOX(vbox), search_frame, FALSE, FALSE, 0);
 
@@ -336,7 +332,7 @@ void create_gui()
     gtk_grid_attach(GTK_GRID(search_grid), search_entry, 1, 0, 1, 1);
     gtk_grid_attach(GTK_GRID(search_grid), search_button, 2, 0, 1, 1);
 
-    // 操作按钮区域
+    // 操作按钮
     GtkWidget* button_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
     gtk_box_pack_start(GTK_BOX(vbox), button_box, FALSE, FALSE, 0);
 
@@ -346,7 +342,7 @@ void create_gui()
     gtk_box_pack_start(GTK_BOX(button_box), display_button, TRUE, TRUE, 0);
     gtk_box_pack_start(GTK_BOX(button_box), clear_button, TRUE, TRUE, 0);
 
-    // 结果显示区域
+    // 结果
     GtkWidget* result_frame = gtk_frame_new("结果");
     gtk_box_pack_start(GTK_BOX(vbox), result_frame, TRUE, TRUE, 0);
 
@@ -373,19 +369,14 @@ void create_gui()
 
 int main(int argc, char* argv[])
 {
-    // 初始化GTK
     gtk_init(&argc, &argv);
 
-    // 创建哈希表
     phone_table = create_hash_table();
 
-    // 创建GUI界面
     create_gui();
 
-    // 运行主循环
     gtk_main();
 
-    // 清理资源
     for (int i = 0; i < phone_table->size; i++) {
         HashNode* current = phone_table->buckets[i];
         while (current != NULL) {

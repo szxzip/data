@@ -1,3 +1,10 @@
+/* *
+ *
+ * 修改：把1,0返回值改成了0,-1，0成功-1失败，以统一全局。
+ * 0,1,2 不变。
+ *
+ */
+
 #include <ctype.h>
 #include <gtk/gtk.h>
 #include <stdio.h>
@@ -186,12 +193,12 @@ int evaluatePostfix(char* postfix, int* result, char* error_msg)
         // 如果是运算符，弹出两个操作数进行计算
         if (isOperator(c)) {
             if (isEmpty(&numStack)) {
-                strcpy(error_msg, "错误：表达式不合法（操作数不足）！");
+                strcpy(error_msg, "错误：表达式不合法！");
                 return -1;
             }
             int b = pop(&numStack);
             if (isEmpty(&numStack)) {
-                strcpy(error_msg, "错误：表达式不合法（操作数不足）！");
+                strcpy(error_msg, "错误：表达式不合法！");
                 return -1;
             }
             int a = pop(&numStack);
@@ -234,7 +241,7 @@ int evaluatePostfix(char* postfix, int* result, char* error_msg)
 
     // 检查栈中是否还有多余的操作数
     if (!isEmpty(&numStack)) {
-        strcpy(error_msg, "错误：表达式不完整（栈中-操作数过多）！");
+        strcpy(error_msg, "错误：表达式不完整！");
         return -1;
     }
 
@@ -276,14 +283,13 @@ int isValidExpression(const char* string, char* error_msg)
     return 0;
 }
 
-// 用于在回调函数中传递 Gtk 小部件
+// GUI
 typedef struct {
     GtkEntry* entry;
     GtkLabel* postfix_label;
     GtkLabel* result_label;
 } AppWidgets;
 
-// “计算”按钮的点击事件处理程序
 static void on_calculate_clicked(GtkButton* button, gpointer user_data)
 {
     AppWidgets* widgets = (AppWidgets*)user_data;
@@ -292,43 +298,41 @@ static void on_calculate_clicked(GtkButton* button, gpointer user_data)
     char error_message[MAX_SIZE];
     int result;
 
-    // 1. 获取输入
+    // 读取输入
     infix_expression = gtk_entry_get_text(widgets->entry);
 
-    // 清空上次的结果
+    // 清空上次结果
     gtk_label_set_text(widgets->postfix_label, "后缀表达式：");
     gtk_label_set_text(widgets->result_label, "计算结果：");
 
-    // 2. 验证输入
+    // 验证输入
     if (isValidExpression(infix_expression, error_message) != 0) {
         gtk_label_set_text(widgets->result_label, error_message);
         return;
     }
 
-    // 3. 转换为后缀表达式
+    // 转换为后缀表达式
     if (infixToPostfix(infix_expression, postfix_expression, error_message) != 0) {
         gtk_label_set_text(widgets->result_label, error_message);
         return;
     }
 
-    // 4. 显示后缀表达式
+    // 显示后缀表达式
     char postfix_buffer[MAX_SIZE * 2 + 50];
     sprintf(postfix_buffer, "后缀表达式：%s", postfix_expression);
     gtk_label_set_text(widgets->postfix_label, postfix_buffer);
 
-    // 5. 计算后缀表达式
+    // 计算后缀表达式
     if (evaluatePostfix(postfix_expression, &result, error_message) != 0) {
         gtk_label_set_text(widgets->result_label, error_message);
         return;
     }
 
-    // 6. 显示最终结果
     char result_buffer[MAX_SIZE];
     sprintf(result_buffer, "计算结果：%d", result);
     gtk_label_set_text(widgets->result_label, result_buffer);
 }
 
-// 激活 GTK 应用程序
 static void activate(GtkApplication* app, gpointer user_data)
 {
     GtkWidget* window;
@@ -336,46 +340,33 @@ static void activate(GtkApplication* app, gpointer user_data)
     GtkWidget* info_label;
     GtkWidget* button;
 
-    // 为 Gtk 小部件分配内存
     AppWidgets* widgets = (AppWidgets*)g_malloc(sizeof(AppWidgets));
 
-    // 创建主窗口
     window = gtk_application_window_new(app);
     gtk_window_set_title(GTK_WINDOW(window), "算术表达式求值器");
     gtk_window_set_default_size(GTK_WINDOW(window), 400, 200);
     gtk_container_set_border_width(GTK_CONTAINER(window), 10);
 
-    // 创建一个垂直布局容器
     vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
     gtk_container_add(GTK_CONTAINER(window), vbox);
 
-    // 1. 信息标签
     info_label = gtk_label_new("请输入算术表达式（支持+、-、*、/和括号）：");
     gtk_box_pack_start(GTK_BOX(vbox), info_label, FALSE, FALSE, 0);
 
-    // 2. 表达式输入框
     widgets->entry = GTK_ENTRY(gtk_entry_new());
     gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(widgets->entry), FALSE, FALSE, 0);
 
-    // 3. 计算按钮
     button = gtk_button_new_with_label("计算");
     gtk_box_pack_start(GTK_BOX(vbox), button, FALSE, FALSE, 0);
 
-    // 4. 后缀表达式标签
     widgets->postfix_label = GTK_LABEL(gtk_label_new("后缀表达式："));
     gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(widgets->postfix_label), FALSE, FALSE, 0);
 
-    // 5. 结果标签
     widgets->result_label = GTK_LABEL(gtk_label_new("计算结果："));
     gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(widgets->result_label), FALSE, FALSE, 0);
 
-    // 连接 "clicked" 信号到回调函数
-    g_signal_connect(button, "clicked", G_CALLBACK(on_calculate_clicked), widgets);
-
-    // 当窗口关闭时，释放 widgets 内存
+    g_signal_connect(button, "clicked", G_CALLBACK(on_calculate_clicked), widgets); // 连接回调函数
     g_signal_connect(window, "destroy", G_CALLBACK(g_free), widgets);
-
-    // 显示所有窗口和控件
     gtk_widget_show_all(window);
 }
 
