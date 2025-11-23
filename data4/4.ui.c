@@ -6,7 +6,7 @@
 #define TABLE_SIZE 100
 #define MAX_PHONE_LENGTH 12
 
-// 哈希表节点结构
+// 节点
 typedef struct HashNode {
     char phone[MAX_PHONE_LENGTH];
     char name[50];
@@ -15,26 +15,28 @@ typedef struct HashNode {
 
 // 哈希表结构
 typedef struct {
-    HashNode** buckets;
-    int size;
-    int count;
+    HashNode** buckets; // 节点
+    int size; // 哈希字节数
+    int count; // 计数
     double average_search_length;
 } HashTable;
 
 HashTable* phone_table = NULL;
+
+// GUI
 GtkWidget* window;
 GtkWidget *name_entry, *phone_entry, *search_entry;
 GtkWidget* result_text;
 GtkWidget* asl_label;
 
-// 字符串哈希
+// 计算字符串哈希
 unsigned int hash_function(const char* phone)
 {
     unsigned int hash = 0;
-    while (*phone) {
-        hash = (hash * 31) + *phone++;
+    while (*phone) { // 指针移动
+        hash = (hash * 31) + *phone++; // 按位幂乗后相加
     }
-    return hash % TABLE_SIZE;
+    return hash % TABLE_SIZE; // 取余以固定范围
 }
 
 // 创建哈希表
@@ -44,7 +46,7 @@ HashTable* create_hash_table()
     table->size = TABLE_SIZE;
     table->count = 0;
     table->average_search_length = 0.0;
-    table->buckets = calloc(TABLE_SIZE, sizeof(HashNode*));
+    table->buckets = calloc(TABLE_SIZE, sizeof(HashNode*)); // 连续分配，类似数组
     return table;
 }
 
@@ -55,17 +57,18 @@ int hash_table_insert(HashTable* table, const char* name, const char* phone)
         return -1; // 表满
     }
 
-    unsigned int index = hash_function(phone);
+    // 处理节点
+    unsigned int index = hash_function(phone); // 计算哈希
     HashNode* new_node = malloc(sizeof(HashNode));
     strcpy(new_node->name, name);
     strcpy(new_node->phone, phone);
     new_node->next = NULL;
 
-    // 处理冲突 - 链地址法
-    if (table->buckets[index] == NULL) {
+    //
+    if (table->buckets[index] == NULL) { // 当前哈希节点为空
         table->buckets[index] = new_node;
     } else {
-        HashNode* current = table->buckets[index];
+        HashNode* current = table->buckets[index]; // 当前哈希节点已占用
         while (current->next != NULL) {
             current = current->next;
         }
@@ -77,14 +80,14 @@ int hash_table_insert(HashTable* table, const char* name, const char* phone)
 }
 
 // 查找
-HashNode* hash_table_search(HashTable* table, const char* phone, int* search_steps)
+HashNode* hash_table_search(HashTable* table, const char* phone, int* search_steps) // 最终修改search_steps
 {
-    unsigned int index = hash_function(phone);
-    HashNode* current = table->buckets[index];
+    unsigned int index = hash_function(phone); // 计算哈希
+    HashNode* current = table->buckets[index]; // 节点定位
     *search_steps = 1;
 
     while (current != NULL) {
-        if (strcmp(current->phone, phone) == 0) {
+        if (strcmp(current->phone, phone) == 0) { // 对比数据
             return current;
         }
         current = current->next;
@@ -106,14 +109,14 @@ void calculate_average_search_length(HashTable* table)
     int total_searches = 0;
 
     for (int i = 0; i < table->size; i++) {
-        HashNode* current = table->buckets[i];
+        HashNode* current = table->buckets[i]; // 对接节点
         int position = 1;
 
         while (current != NULL) {
             int steps;
-            hash_table_search(table, current->phone, &steps);
+            hash_table_search(table, current->phone, &steps); // 更新当前节点的查找长度
             total_steps += steps;
-            total_searches++;
+            total_searches++; // 总查找次数
             current = current->next;
         }
     }
@@ -121,7 +124,7 @@ void calculate_average_search_length(HashTable* table)
     table->average_search_length = total_steps / total_searches;
 }
 
-// 显示哈希表
+// GUI 显示哈希表
 void display_hash_table(HashTable* table, GtkTextBuffer* buffer)
 {
     gtk_text_buffer_set_text(buffer, "哈希表内容:\n\n", -1);
@@ -168,7 +171,7 @@ void display_hash_table(HashTable* table, GtkTextBuffer* buffer)
     gtk_text_buffer_insert(buffer, &iter, buffer_text, -1);
 }
 
-// GUI
+// GUI 响应
 void on_insert_clicked(GtkWidget* widget, gpointer data)
 {
     const char* name = gtk_entry_get_text(GTK_ENTRY(name_entry));
@@ -278,9 +281,6 @@ void create_gui()
 
     // 标题
     GtkWidget* title_label = gtk_label_new("学生手机号哈希表管理系统");
-    PangoFontDescription* font_desc = pango_font_description_from_string("Sans Bold 16");
-    gtk_widget_override_font(title_label, font_desc);
-    pango_font_description_free(font_desc);
     gtk_box_pack_start(GTK_BOX(vbox), title_label, FALSE, FALSE, 0);
 
     // 平均查找长度
@@ -371,12 +371,12 @@ int main(int argc, char* argv[])
 {
     gtk_init(&argc, &argv);
 
-    phone_table = create_hash_table();
+    phone_table = create_hash_table(); // 创建哈希表
 
     create_gui();
-
     gtk_main();
 
+    // 释放内存
     for (int i = 0; i < phone_table->size; i++) {
         HashNode* current = phone_table->buckets[i];
         while (current != NULL) {
