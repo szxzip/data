@@ -617,7 +617,7 @@ void on_load_data_clicked(GtkWidget* widget, gpointer data)
 // UI 清除、退出
 void on_clear_clicked(GtkWidget* widget, gpointer data)
 {
-    update_display("欢迎使用学生成绩管理系统！\n\n请选择左侧的功能按钮进行操作。");
+    update_display("欢迎使用学生成绩管理系统");
 }
 
 void on_quit_clicked(GtkWidget* widget, gpointer data)
@@ -670,7 +670,7 @@ int main(int argc, char* argv[])
     gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(text_view), GTK_WRAP_WORD);
 
     text_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(text_view));
-    gtk_text_buffer_set_text(text_buffer, "欢迎使用学生成绩管理系统！\n\n程序启动时自动加载数据，退出时自动保存。\n请选择左侧的功能按钮进行操作。", -1);
+    gtk_text_buffer_set_text(text_buffer, "欢迎使用学生成绩管理系统", -1);
 
     gtk_container_add(GTK_CONTAINER(scrolled_window), text_view);
     gtk_box_pack_start(GTK_BOX(vbox), scrolled_window, TRUE, TRUE, 5);
