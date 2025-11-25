@@ -1,10 +1,3 @@
-/* *
- *
- * 修改：把1,0返回值改成了0,-1，0成功-1失败，以统一全局。
- * 0,1,2 不变。
- *
- */
-
 #include <ctype.h>
 #include <gtk/gtk.h>
 #include <stdio.h>
@@ -18,6 +11,7 @@ typedef struct {
     int top;
 } Stack;
 
+// 栈操作函数
 void initStack(Stack* s)
 {
     s->top = -1;
@@ -25,31 +19,31 @@ void initStack(Stack* s)
 
 int isEmpty(Stack* s)
 {
-    return s->top == -1; // 空的
+    return s->top == -1;
 }
 
 int push(Stack* s, int value)
 {
     if (s->top >= MAX_SIZE - 1) {
-        return -1; // 满了
+        return 0;
     }
     s->top++;
     s->data[s->top] = value;
-    return 0;
+    return 1;
 }
 
 int pop(Stack* s)
 {
     if (isEmpty(s)) {
-        return -1; // 栈为空
+        return -1;
     }
     return s->data[(s->top)--];
 }
 
 int gettop(Stack* s)
 {
-    if (isEmpty(s)) {
-        return -1; // 空的
+    if (s->top == -1) {
+        return 0;
     }
     return s->data[s->top];
 }
@@ -75,63 +69,82 @@ int getPriority(char op)
 
 int safeIsDigit(char c)
 {
-    // 将字符转换为无符号字符以避免负数问题
     return isdigit((unsigned char)c);
 }
 
-int infixToPostfix(const char* infix, char* postfix, char* error_msg) // error_msg: GUI 错误报告
+// 输入验证函数
+int isValidExpression(char* string)
 {
-    Stack opStack; // 运算符栈
+    int len = strlen(string);
+    int parenthesis = 0;
+
+    for (int i = 0; i < len; i++) {
+        char c = string[i];
+
+        if (!safeIsDigit(c) && !isOperator(c) && c != '(' && c != ')' && c != ' ') {
+            return 0;
+        }
+
+        if (c == '(')
+            parenthesis++;
+        if (c == ')')
+            parenthesis--;
+
+        if (parenthesis < 0) {
+            return 0;
+        }
+    }
+
+    if (parenthesis != 0) {
+        return 0;
+    }
+
+    return 1;
+}
+
+// 中缀转后缀表达式
+void infixToPostfix(char* infix, char* postfix)
+{
+    Stack opStack;
     initStack(&opStack);
     int i = 0, j = 0;
     char c;
 
-    error_msg[0] = '\0';
-
     while (infix[i] != '\0') {
         c = infix[i];
 
-        // 跳过空格
         if (c == ' ') {
             i++;
             continue;
         }
 
-        // 如果是数字，直接输出到后缀表达式
         if (safeIsDigit(c)) {
             while (safeIsDigit(infix[i])) {
                 postfix[j++] = infix[i++];
             }
-            postfix[j++] = ' '; // 用空格分隔数字
+            postfix[j++] = ' ';
             continue;
         }
 
-        // 如果是左括号，直接入栈
         if (c == '(') {
             push(&opStack, c);
             i++;
             continue;
         }
 
-        // 如果是右括号，弹出栈中元素直到遇到左括号
         if (c == ')') {
             while (!isEmpty(&opStack) && gettop(&opStack) != '(') {
                 postfix[j++] = pop(&opStack);
                 postfix[j++] = ' ';
             }
             if (!isEmpty(&opStack) && gettop(&opStack) == '(') {
-                pop(&opStack); // 弹出左括号
-            } else {
-                strcpy(error_msg, "错误：括号不匹配！");
-                return -1;
+                pop(&opStack);
             }
             i++;
             continue;
         }
 
-        // 如果是运算符
         if (isOperator(c)) {
-            // 弹出优先级更高或相等的运算符
             while (!isEmpty(&opStack) && getPriority(gettop(&opStack)) >= getPriority(c) && gettop(&opStack) != '(') {
                 postfix[j++] = pop(&opStack);
                 postfix[j++] = ' ';
@@ -141,45 +154,33 @@ int infixToPostfix(const char* infix, char* postfix, char* error_msg) // error_m
             continue;
         }
 
-        // 如果遇到未知字符
-        sprintf(error_msg, "错误：遇到未知字符 '%c'", c);
-        return -1;
+        i++;
     }
 
-    // 弹出栈中所有剩余运算符
     while (!isEmpty(&opStack)) {
-        if (gettop(&opStack) == '(') {
-            strcpy(error_msg, "错误：括号不匹配！");
-            return -1;
-        }
         postfix[j++] = pop(&opStack);
         postfix[j++] = ' ';
     }
 
-    postfix[j] = '\0'; // 添加字符串结束符
-    return 0;
+    postfix[j] = '\0';
 }
 
 // 计算后缀表达式
-int evaluatePostfix(char* postfix, int* result, char* error_msg)
+int evaluatePostfix(char* postfix)
 {
-    Stack numStack; // 操作数栈
+    Stack numStack;
     initStack(&numStack);
     int i = 0;
     char c;
 
-    error_msg[0] = '\0'; // 清空错误信息
-
     while (postfix[i] != '\0') {
         c = postfix[i];
 
-        // 跳过空格
         if (c == ' ') {
             i++;
             continue;
         }
 
-        // 如果是数字，解析整个数字并入栈
         if (safeIsDigit(c)) {
             int num = 0;
             while (safeIsDigit(postfix[i])) {
@@ -190,195 +191,181 @@ int evaluatePostfix(char* postfix, int* result, char* error_msg)
             continue;
         }
 
-        // 如果是运算符，弹出两个操作数进行计算
         if (isOperator(c)) {
             if (isEmpty(&numStack)) {
-                strcpy(error_msg, "错误：表达式不合法！");
                 return -1;
             }
             int b = pop(&numStack);
             if (isEmpty(&numStack)) {
-                strcpy(error_msg, "错误：表达式不合法！");
                 return -1;
             }
             int a = pop(&numStack);
-            int res;
+            int result;
 
             switch (c) {
             case '+':
-                res = a + b;
+                result = a + b;
                 break;
             case '-':
-                res = a - b;
+                result = a - b;
                 break;
             case '*':
-                res = a * b;
+                result = a * b;
                 break;
             case '/':
                 if (b == 0) {
-                    strcpy(error_msg, "错误：除数不能为零！");
                     return -1;
                 }
-                res = a / b;
+                result = a / b;
                 break;
             default:
-                strcpy(error_msg, "错误：未知运算符！");
                 return -1;
             }
-            push(&numStack, res);
+
+            push(&numStack, result);
             i++;
             continue;
         }
-        i++; // 处理下一个字符
+
+        i++;
     }
 
     if (isEmpty(&numStack)) {
-        strcpy(error_msg, "错误：表达式为空！");
         return -1;
     }
 
-    *result = pop(&numStack);
+    int result = pop(&numStack);
 
-    // 检查栈中是否还有多余的操作数
     if (!isEmpty(&numStack)) {
-        strcpy(error_msg, "错误：表达式不完整！");
         return -1;
     }
 
-    return 0;
+    return result;
 }
 
-int isValidExpression(const char* string, char* error_msg)
+// GTK回调函数
+void on_calculate_clicked(GtkWidget* widget, gpointer data)
 {
-    int len = strlen(string);
-    int parenthesis = 0;
-    error_msg[0] = '\0';
+    GtkWidget** widgets = (GtkWidget**)data;
+    GtkEntry* entry = GTK_ENTRY(widgets[0]);
+    GtkLabel* result_label = GTK_LABEL(widgets[1]);
+    GtkLabel* postfix_label = GTK_LABEL(widgets[2]);
 
-    for (int i = 0; i < len; i++) {
-        char c = string[i];
+    const gchar* infix = gtk_entry_get_text(entry);
 
-        // 允许的字符：数字、运算符、括号、空格
-        if (!safeIsDigit(c) && !isOperator(c) && c != '(' && c != ')' && c != ' ') {
-            sprintf(error_msg, "错误：包含非法字符 '%c'", c);
-            return -1;
-        }
-
-        // 检查括号匹配
-        if (c == '(')
-            parenthesis++;
-        if (c == ')')
-            parenthesis--;
-
-        if (parenthesis < 0) {
-            strcpy(error_msg, "错误：括号不匹配！");
-            return -1;
-        }
+    if (strlen(infix) == 0) {
+        gtk_label_set_text(result_label, "错误：请输入表达式！");
+        gtk_label_set_text(postfix_label, "");
+        return;
     }
 
-    if (parenthesis != 0) {
-        strcpy(error_msg, "错误：括号不匹配！");
-        return -1;
+    if (!isValidExpression((char*)infix)) {
+        gtk_label_set_text(result_label, "错误：表达式不合法！");
+        gtk_label_set_text(postfix_label, "");
+        return;
     }
 
-    return 0;
+    char postfix[MAX_SIZE * 2];
+    infixToPostfix((char*)infix, postfix);
+
+    gtk_label_set_text(postfix_label, postfix);
+
+    int result = evaluatePostfix(postfix);
+    if (result == -1) {
+        gtk_label_set_text(result_label, "错误：计算失败！");
+    } else {
+        char result_str[50];
+        snprintf(result_str, sizeof(result_str), "结果: %d", result);
+        gtk_label_set_text(result_label, result_str);
+    }
 }
 
-// GUI
-typedef struct {
-    GtkEntry* entry;
-    GtkLabel* postfix_label;
-    GtkLabel* result_label;
-} AppWidgets;
-
-static void on_calculate_clicked(GtkButton* button, gpointer user_data)
+void on_clear_clicked(GtkWidget* widget, gpointer data)
 {
-    AppWidgets* widgets = (AppWidgets*)user_data;
-    const char* infix_expression;
-    char postfix_expression[MAX_SIZE * 2]; // 后缀表达式可能更长
-    char error_message[MAX_SIZE];
-    int result;
+    GtkWidget** widgets = (GtkWidget**)data;
+    GtkEntry* entry = GTK_ENTRY(widgets[0]);
+    GtkLabel* result_label = GTK_LABEL(widgets[1]);
+    GtkLabel* postfix_label = GTK_LABEL(widgets[2]);
 
-    // 读取输入
-    infix_expression = gtk_entry_get_text(widgets->entry);
-
-    // 清空上次结果
-    gtk_label_set_text(widgets->postfix_label, "后缀表达式：");
-    gtk_label_set_text(widgets->result_label, "计算结果：");
-
-    // 验证输入
-    if (isValidExpression(infix_expression, error_message) != 0) {
-        gtk_label_set_text(widgets->result_label, error_message);
-        return;
-    }
-
-    // 转换为后缀表达式
-    if (infixToPostfix(infix_expression, postfix_expression, error_message) != 0) {
-        gtk_label_set_text(widgets->result_label, error_message);
-        return;
-    }
-
-    // 显示后缀表达式
-    char postfix_buffer[MAX_SIZE * 2 + 50];
-    sprintf(postfix_buffer, "后缀表达式：%s", postfix_expression);
-    gtk_label_set_text(widgets->postfix_label, postfix_buffer);
-
-    // 计算后缀表达式
-    if (evaluatePostfix(postfix_expression, &result, error_message) != 0) {
-        gtk_label_set_text(widgets->result_label, error_message);
-        return;
-    }
-
-    char result_buffer[MAX_SIZE];
-    sprintf(result_buffer, "计算结果：%d", result);
-    gtk_label_set_text(widgets->result_label, result_buffer);
+    gtk_entry_set_text(entry, "");
+    gtk_label_set_text(result_label, "结果将显示在这里");
+    gtk_label_set_text(postfix_label, "后缀表达式将显示在这里");
 }
 
-static void activate(GtkApplication* app, gpointer user_data)
+int main(int argc, char* argv[])
 {
     GtkWidget* window;
-    GtkWidget* vbox;
-    GtkWidget* info_label;
-    GtkWidget* button;
+    GtkWidget* grid;
+    GtkWidget* entry;
+    GtkWidget* calculate_btn;
+    GtkWidget* clear_btn;
+    GtkWidget* result_label;
+    GtkWidget* postfix_label;
+    GtkWidget* title_label;
+    GtkWidget* input_label;
+    GtkWidget* postfix_title_label;
+    GtkWidget* result_title_label;
 
-    AppWidgets* widgets = (AppWidgets*)g_malloc(sizeof(AppWidgets));
+    gtk_init(&argc, &argv);
 
-    window = gtk_application_window_new(app);
+    // 创建主窗口
+    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(window), "算术表达式求值器");
-    gtk_window_set_default_size(GTK_WINDOW(window), 400, 200);
+    gtk_window_set_default_size(GTK_WINDOW(window), 200, 300);
+    gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
     gtk_container_set_border_width(GTK_CONTAINER(window), 10);
 
-    vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
-    gtk_container_add(GTK_CONTAINER(window), vbox);
+    // 创建网格布局
+    grid = gtk_grid_new();
+    gtk_grid_set_row_spacing(GTK_GRID(grid), 10);
+    gtk_grid_set_column_spacing(GTK_GRID(grid), 10);
+    gtk_container_add(GTK_CONTAINER(window), grid);
 
-    info_label = gtk_label_new("请输入算术表达式（支持+、-、*、/和括号）：");
-    gtk_box_pack_start(GTK_BOX(vbox), info_label, FALSE, FALSE, 0);
+    // 创建标题
+    title_label = gtk_label_new("算术表达式求值器");
+    gtk_grid_attach(GTK_GRID(grid), title_label, 0, 0, 2, 1);
 
-    widgets->entry = GTK_ENTRY(gtk_entry_new());
-    gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(widgets->entry), FALSE, FALSE, 0);
+    // 创建输入标签和输入框
+    input_label = gtk_label_new("请输入表达式:");
+    gtk_grid_attach(GTK_GRID(grid), input_label, 0, 1, 2, 1);
 
-    button = gtk_button_new_with_label("计算");
-    gtk_box_pack_start(GTK_BOX(vbox), button, FALSE, FALSE, 0);
+    entry = gtk_entry_new();
+    gtk_grid_attach(GTK_GRID(grid), entry, 0, 2, 2, 1);
 
-    widgets->postfix_label = GTK_LABEL(gtk_label_new("后缀表达式："));
-    gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(widgets->postfix_label), FALSE, FALSE, 0);
+    // 创建按钮
+    calculate_btn = gtk_button_new_with_label("计算");
+    clear_btn = gtk_button_new_with_label("清空");
 
-    widgets->result_label = GTK_LABEL(gtk_label_new("计算结果："));
-    gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(widgets->result_label), FALSE, FALSE, 0);
+    gtk_grid_attach(GTK_GRID(grid), calculate_btn, 0, 3, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), clear_btn, 1, 3, 1, 1);
 
-    g_signal_connect(button, "clicked", G_CALLBACK(on_calculate_clicked), widgets); // 连接回调函数
-    g_signal_connect(window, "destroy", G_CALLBACK(g_free), widgets);
+    // 创建后缀表达式显示区域
+    postfix_title_label = gtk_label_new("后缀表达式:");
+    gtk_grid_attach(GTK_GRID(grid), postfix_title_label, 0, 4, 2, 1);
+
+    postfix_label = gtk_label_new("后缀表达式将显示在这里");
+    gtk_label_set_line_wrap(GTK_LABEL(postfix_label), TRUE);
+    gtk_grid_attach(GTK_GRID(grid), postfix_label, 0, 5, 2, 1);
+
+    // 创建结果显示区域
+    result_title_label = gtk_label_new("计算结果:");
+    gtk_grid_attach(GTK_GRID(grid), result_title_label, 0, 6, 2, 1);
+
+    result_label = gtk_label_new("结果将显示在这里");
+    gtk_grid_attach(GTK_GRID(grid), result_label, 0, 7, 2, 1);
+
+    // 存储需要传递的控件指针
+    GtkWidget* widgets[3] = { entry, result_label, postfix_label };
+
+    // 连接信号
+    g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
+    g_signal_connect(calculate_btn, "clicked", G_CALLBACK(on_calculate_clicked), widgets);
+    g_signal_connect(clear_btn, "clicked", G_CALLBACK(on_clear_clicked), widgets);
+
+    // 显示所有控件
     gtk_widget_show_all(window);
-}
 
-int main(int argc, char** argv)
-{
-    GtkApplication* app;
-    int status;
+    gtk_main();
 
-    app = gtk_application_new("org.example.calculator", G_APPLICATION_DEFAULT_FLAGS);
-    g_signal_connect(app, "activate", G_CALLBACK(activate), NULL);
-    status = g_application_run(G_APPLICATION(app), argc, argv);
-    g_object_unref(app);
-
-    return status;
+    return 0;
 }
