@@ -5,6 +5,8 @@
 
 #define TABLE_SIZE 100
 #define MAX_PHONE_LENGTH 12
+#define TARGET_ASL 2.0 // 目标平均查找长度
+#define MAX_LOAD_FACTOR 0.7 // 最大装载因子
 
 // （链式）数据节点
 typedef struct HashNode {
@@ -18,7 +20,8 @@ typedef struct {
     HashNode** buckets; // 节点
     int size; // 哈希字节数
     int count; // 计数
-    double average_search_length;
+    double asl;
+    double target_asl;
 } HashTable;
 
 HashTable* phone_table = NULL;
@@ -30,7 +33,10 @@ GtkWidget* result_text;
 GtkWidget* asl_label;
 
 // 计算字符串哈希
+
 /*
+ * 更好的算法，有助于减小asl
+ *
  * unsigned int hash_function(const char* phone)
  * {
  *     unsigned int hash = 0;
@@ -42,6 +48,7 @@ GtkWidget* asl_label;
  *
  */
 
+// 更多冲突的算法
 unsigned int hash_function(const char* phone)
 {
     return (phone[10] - '0') % 10; // 只取最后一位，字符转数字；相同数字结尾都会冲突
@@ -53,7 +60,8 @@ HashTable* create_hash_table()
     HashTable* table = malloc(sizeof(HashTable));
     table->size = TABLE_SIZE;
     table->count = 0;
-    table->average_search_length = 0.0;
+    table->asl = 0.0;
+    table->target_asl = TARGET_ASL;
     table->buckets = calloc(TABLE_SIZE, sizeof(HashNode*)); // 连续分配，类似数组
     return table;
 }
@@ -105,11 +113,11 @@ HashNode* hash_table_search(HashTable* table, const char* phone, int* search_ste
     return NULL;
 }
 
-// 计算平均查找长度
-void calculate_average_search_length(HashTable* table)
+// 计算平均查找长度asl
+void calculate_asl(HashTable* table)
 {
     if (table->count == 0) {
-        table->average_search_length = 0.0;
+        table->asl = 0.0;
         return;
     }
 
@@ -129,7 +137,72 @@ void calculate_average_search_length(HashTable* table)
         }
     }
 
-    table->average_search_length = total_steps / total_searches;
+    table->asl = total_steps / total_searches;
+}
+
+// 哈希表扩容
+void hash_table_resize(HashTable* table, int new_size)
+{
+    printf("正在扩容: %d -> %d\n", table->size, new_size);
+
+    // 创建新的桶数组
+    HashNode** new_buckets = calloc(new_size, sizeof(HashNode*));
+
+    // 重新哈希
+    int rehashed_count = 0;
+    for (int i = 0; i < table->size; i++) {
+        HashNode* current = table->buckets[i];
+        while (current != NULL) {
+            HashNode* next = current->next;
+
+            // 计算新位置
+            unsigned int new_index = hash_function(current->phone) % new_size;
+
+            // 插入到新表
+            if (new_buckets[new_index] == NULL) {
+                new_buckets[new_index] = current;
+                current->next = NULL;
+            } else {
+                HashNode* temp = new_buckets[new_index];
+                while (temp->next != NULL) {
+                    temp = temp->next;
+                }
+                temp->next = current;
+                current->next = NULL;
+            }
+
+            current = next;
+            rehashed_count++;
+        }
+    }
+
+    // 释放旧桶数组
+    free(table->buckets);
+
+    // 更新表结构
+    table->buckets = new_buckets;
+    table->size = new_size;
+
+    printf("扩容完成，重新哈希了 %d 个元素\n", rehashed_count);
+}
+
+// 检查&扩容
+void check_and_resize(HashTable* table)
+{
+    double load_factor = (double)table->count / table->size;
+
+    if (table->asl > table->target_asl || load_factor > MAX_LOAD_FACTOR) {
+        int new_size = table->size * 2; // 扩容为2倍
+
+        printf("ASL %.3f 超过目标值 %.1f 或装载因子 %.3f 过高，正在扩容...\n",
+            table->asl, table->target_asl, load_factor);
+
+        hash_table_resize(table, new_size);
+
+        // 重新计算ASL
+        calculate_asl(table);
+        printf("扩容后ASL: %.3f\n", table->asl);
+    }
 }
 
 // GUI 显示哈希表
@@ -148,7 +221,7 @@ void display_hash_table(HashTable* table, GtkTextBuffer* buffer)
             HashNode* current = table->buckets[i];
             int chain_length = 0;
 
-            sprintf(buffer_text, "桶[%d]: ", i);
+            sprintf(buffer_text, "平均查找长度: %.3f (目标: %.1f)\n", table->asl, table->target_asl);
             gtk_text_buffer_insert(buffer, &iter, buffer_text, -1);
 
             while (current != NULL) {
@@ -175,7 +248,7 @@ void display_hash_table(HashTable* table, GtkTextBuffer* buffer)
     gtk_text_buffer_insert(buffer, &iter, buffer_text, -1);
     sprintf(buffer_text, "装载因子: %.3f\n", (double)table->count / table->size);
     gtk_text_buffer_insert(buffer, &iter, buffer_text, -1);
-    sprintf(buffer_text, "平均查找长度: %.3f\n", table->average_search_length);
+    sprintf(buffer_text, "平均查找长度: %.3f\n", table->asl);
     gtk_text_buffer_insert(buffer, &iter, buffer_text, -1);
 }
 
@@ -202,17 +275,31 @@ void on_insert_clicked(GtkWidget* widget, gpointer data)
     GtkTextBuffer* buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(result_text));
 
     if (result == 0) {
-        calculate_average_search_length(phone_table);
+        calculate_asl(phone_table);
+
+        // 检查并扩容
+        double old_asl = phone_table->asl;
+        int old_size = phone_table->size;
+        check_and_resize(phone_table);
+
         char asl_text[100];
-        sprintf(asl_text, "当前平均查找长度: %.3f", phone_table->average_search_length);
+        if (phone_table->size > old_size) {
+            sprintf(asl_text, "当前平均查找长度: %.3f (已自动扩容 %d->%d)", phone_table->asl, old_size, phone_table->size);
+        } else {
+            sprintf(asl_text, "当前平均查找长度: %.3f (目标: %.1f)", phone_table->asl, phone_table->target_asl);
+        }
         gtk_label_set_text(GTK_LABEL(asl_label), asl_text);
 
         gtk_text_buffer_set_text(buffer, "插入成功!\n", -1);
         GtkTextIter iter;
         gtk_text_buffer_get_end_iter(buffer, &iter);
 
-        char info_text[100];
-        sprintf(info_text, "姓名: %s, 手机号: %s\n", name, phone);
+        char info_text[200];
+        if (phone_table->size > old_size) {
+            sprintf(info_text, "姓名: %s, 手机号: %s\n\n自动扩容信息:\n原大小: %d, 新大小: %d\n原ASL: %.3f, 新ASL: %.3f", name, phone, old_size, phone_table->size, old_asl, phone_table->asl);
+        } else {
+            sprintf(info_text, "姓名: %s, 手机号: %s", name, phone);
+        }
         gtk_text_buffer_insert(buffer, &iter, info_text, -1);
     } else {
         gtk_text_buffer_set_text(buffer, "插入失败! 哈希表可能已满。", -1);
@@ -237,7 +324,7 @@ void on_search_clicked(GtkWidget* widget, gpointer data)
     if (result != NULL) {
         char result_text[200];
         sprintf(result_text, "查找成功!\n姓名: %s\n手机号: %s\n查找步数: %d\n当前平均查找长度: %.3f",
-            result->name, result->phone, search_steps, phone_table->average_search_length);
+            result->name, result->phone, search_steps, phone_table->asl);
         gtk_text_buffer_set_text(buffer, result_text, -1);
     } else {
         char result_text[100];
@@ -262,13 +349,16 @@ void on_clear_clicked(GtkWidget* widget, gpointer data)
             current = current->next;
             free(temp);
         }
-        phone_table->buckets[i] = NULL;
     }
-    phone_table->count = 0;
-    phone_table->average_search_length = 0.0;
+    free(phone_table->buckets); // 释放旧数组
 
-    gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(result_text)),
-        "哈希表已清空!", -1);
+    // 重新初始化为默认大小
+    phone_table->size = TABLE_SIZE;
+    phone_table->count = 0;
+    phone_table->asl = 0.0;
+    phone_table->buckets = calloc(TABLE_SIZE, sizeof(HashNode*)); // 重新分配
+
+    gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(result_text)), "哈希表已清空并重置!", -1);
     gtk_label_set_text(GTK_LABEL(asl_label), "当前平均查找长度: 0.000");
 
     // 清空输入框
