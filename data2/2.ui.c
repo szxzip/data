@@ -257,7 +257,7 @@ int evaluatePostfix(char* postfix)
     return result;
 }
 
-// GTK回调函数
+// GTK
 void on_calculate_clicked(GtkWidget* widget, gpointer data)
 {
     GtkWidget** widgets = (GtkWidget**)data;
@@ -309,8 +309,8 @@ void on_clear_clicked(GtkWidget* widget, gpointer data)
 int main(int argc, char* argv[])
 {
     GtkWidget* window;
-    GtkWidget* vbox; // 改为垂直盒子布局
-    GtkWidget* hbox; // 水平盒子布局用于按钮
+    GtkWidget* vbox;
+    GtkWidget* hbox;
     GtkWidget* entry;
     GtkWidget* calculate_btn;
     GtkWidget* clear_btn;
@@ -323,29 +323,26 @@ int main(int argc, char* argv[])
 
     gtk_init(&argc, &argv);
 
-    // 创建主窗口
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(window), "算术表达式求值器");
     gtk_window_set_default_size(GTK_WINDOW(window), 400, 300);
     gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
     gtk_container_set_border_width(GTK_CONTAINER(window), 15);
 
-    // 创建垂直盒子布局 - 更好的空间利用
     vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
     gtk_container_add(GTK_CONTAINER(window), vbox);
 
-    // 创建标题
     title_label = gtk_label_new("算术表达式求值器");
     gtk_box_pack_start(GTK_BOX(vbox), title_label, FALSE, FALSE, 0);
 
-    // 创建输入标签和输入框
+    // 输入输入
     input_label = gtk_label_new("请输入表达式:");
     gtk_box_pack_start(GTK_BOX(vbox), input_label, FALSE, FALSE, 0);
 
     entry = gtk_entry_new();
     gtk_box_pack_start(GTK_BOX(vbox), entry, FALSE, FALSE, 0);
 
-    // 创建水平盒子用于按钮
+    // 按钮盒子
     hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
     gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
@@ -363,12 +360,12 @@ int main(int argc, char* argv[])
     gtk_label_set_line_wrap(GTK_LABEL(postfix_label), TRUE);
     gtk_label_set_selectable(GTK_LABEL(postfix_label), TRUE);
 
-    // 为标签添加边框使其更明显
+    // 边框
     GtkWidget* postfix_frame = gtk_frame_new(NULL);
     gtk_container_add(GTK_CONTAINER(postfix_frame), postfix_label);
     gtk_box_pack_start(GTK_BOX(vbox), postfix_frame, FALSE, FALSE, 0);
 
-    // 创建结果显示区域
+    // 结果显示区域
     result_title_label = gtk_label_new("计算结果:");
     gtk_box_pack_start(GTK_BOX(vbox), result_title_label, FALSE, FALSE, 0);
 
@@ -379,7 +376,7 @@ int main(int argc, char* argv[])
     gtk_container_add(GTK_CONTAINER(result_frame), result_label);
     gtk_box_pack_start(GTK_BOX(vbox), result_frame, FALSE, FALSE, 0);
 
-    // 存储需要传递的控件指针
+    // 存储控件指针
     GtkWidget* widgets[3] = { entry, result_label, postfix_label };
 
     // 连接信号
@@ -387,7 +384,7 @@ int main(int argc, char* argv[])
     g_signal_connect(calculate_btn, "clicked", G_CALLBACK(on_calculate_clicked), widgets);
     g_signal_connect(clear_btn, "clicked", G_CALLBACK(on_clear_clicked), widgets);
 
-    // 显示所有控件
+    // 显示所有widgets
     gtk_widget_show_all(window);
 
     gtk_main();
