@@ -19,13 +19,13 @@ void initStack(Stack* s)
 
 int isEmpty(Stack* s)
 {
-    return s->top == -1;
+    return s->top == -1; // 空的
 }
 
 int push(Stack* s, int value)
 {
     if (s->top >= MAX_SIZE - 1) {
-        return 0;
+        return 0; // 满了
     }
     s->top++;
     s->data[s->top] = value;
@@ -35,7 +35,7 @@ int push(Stack* s, int value)
 int pop(Stack* s)
 {
     if (isEmpty(s)) {
-        return -1;
+        return -1; // 栈为空
     }
     return s->data[(s->top)--];
 }
@@ -43,7 +43,7 @@ int pop(Stack* s)
 int gettop(Stack* s)
 {
     if (s->top == -1) {
-        return 0;
+        return 0; // 空的
     }
     return s->data[s->top];
 }
@@ -69,6 +69,7 @@ int getPriority(char op)
 
 int safeIsDigit(char c)
 {
+    // 将字符转换为无符号字符以避免负数问题
     return isdigit((unsigned char)c);
 }
 
@@ -81,22 +82,24 @@ int isValidExpression(char* string)
     for (int i = 0; i < len; i++) {
         char c = string[i];
 
+        // 允许的字符：数字、运算符、括号、空格
         if (!safeIsDigit(c) && !isOperator(c) && c != '(' && c != ')' && c != ' ') {
-            return 0;
+            return 0; // 错误：包含非法字符
         }
 
+        // 检查括号匹配
         if (c == '(')
             parenthesis++;
         if (c == ')')
             parenthesis--;
 
         if (parenthesis < 0) {
-            return 0;
+            return 0; // 错误：括号不匹配
         }
     }
 
     if (parenthesis != 0) {
-        return 0;
+        return 0; // 错误：括号不匹配
     }
 
     return 1;
@@ -105,7 +108,7 @@ int isValidExpression(char* string)
 // 中缀转后缀表达式
 void infixToPostfix(char* infix, char* postfix)
 {
-    Stack opStack;
+    Stack opStack; // 运算符栈
     initStack(&opStack);
     int i = 0, j = 0;
     char c;
@@ -113,38 +116,44 @@ void infixToPostfix(char* infix, char* postfix)
     while (infix[i] != '\0') {
         c = infix[i];
 
+        // 跳过空格
         if (c == ' ') {
             i++;
             continue;
         }
 
+        // 如果是数字，直接输出到后缀表达式
         if (safeIsDigit(c)) {
             while (safeIsDigit(infix[i])) {
                 postfix[j++] = infix[i++];
             }
-            postfix[j++] = ' ';
+            postfix[j++] = ' '; // 用空格分隔数字
             continue;
         }
 
+        // 如果是左括号，直接入栈
         if (c == '(') {
             push(&opStack, c);
             i++;
             continue;
         }
 
+        // 如果是右括号，弹出栈中元素直到遇到左括号
         if (c == ')') {
             while (!isEmpty(&opStack) && gettop(&opStack) != '(') {
                 postfix[j++] = pop(&opStack);
                 postfix[j++] = ' ';
             }
             if (!isEmpty(&opStack) && gettop(&opStack) == '(') {
-                pop(&opStack);
+                pop(&opStack); // 弹出左括号
             }
             i++;
             continue;
         }
 
+        // 如果是运算符
         if (isOperator(c)) {
+            // 弹出优先级更高或相等的运算符
             while (!isEmpty(&opStack) && getPriority(gettop(&opStack)) >= getPriority(c) && gettop(&opStack) != '(') {
                 postfix[j++] = pop(&opStack);
                 postfix[j++] = ' ';
@@ -157,18 +166,19 @@ void infixToPostfix(char* infix, char* postfix)
         i++;
     }
 
+    // 弹出栈中所有剩余运算符
     while (!isEmpty(&opStack)) {
         postfix[j++] = pop(&opStack);
         postfix[j++] = ' ';
     }
 
-    postfix[j] = '\0';
+    postfix[j] = '\0'; // 添加字符串结束符
 }
 
 // 计算后缀表达式
 int evaluatePostfix(char* postfix)
 {
-    Stack numStack;
+    Stack numStack; // 操作数栈
     initStack(&numStack);
     int i = 0;
     char c;
@@ -176,11 +186,13 @@ int evaluatePostfix(char* postfix)
     while (postfix[i] != '\0') {
         c = postfix[i];
 
+        // 跳过空格
         if (c == ' ') {
             i++;
             continue;
         }
 
+        // 如果是数字，解析整个数字并入栈
         if (safeIsDigit(c)) {
             int num = 0;
             while (safeIsDigit(postfix[i])) {
@@ -191,13 +203,14 @@ int evaluatePostfix(char* postfix)
             continue;
         }
 
+        // 如果是运算符，弹出两个操作数进行计算
         if (isOperator(c)) {
             if (isEmpty(&numStack)) {
-                return -1;
+                return -1; // 错误：表达式不合法
             }
             int b = pop(&numStack);
             if (isEmpty(&numStack)) {
-                return -1;
+                return -1; // 错误：表达式不合法
             }
             int a = pop(&numStack);
             int result;
@@ -214,12 +227,12 @@ int evaluatePostfix(char* postfix)
                 break;
             case '/':
                 if (b == 0) {
-                    return -1;
+                    return -1; // 错误：除数不能为零
                 }
                 result = a / b;
                 break;
             default:
-                return -1;
+                return -1; // 错误：未知运算符
             }
 
             push(&numStack, result);
@@ -227,17 +240,18 @@ int evaluatePostfix(char* postfix)
             continue;
         }
 
-        i++;
+        i++; // 处理下一个字符
     }
 
     if (isEmpty(&numStack)) {
-        return -1;
+        return -1; // 错误：表达式为空
     }
 
     int result = pop(&numStack);
 
+    // 检查栈中是否还有多余的操作数
     if (!isEmpty(&numStack)) {
-        return -1;
+        return -1; // 错误：表达式不完整
     }
 
     return result;
@@ -288,14 +302,15 @@ void on_clear_clicked(GtkWidget* widget, gpointer data)
     GtkLabel* postfix_label = GTK_LABEL(widgets[2]);
 
     gtk_entry_set_text(entry, "");
-    gtk_label_set_text(result_label, "结果将显示在这里");
-    gtk_label_set_text(postfix_label, "后缀表达式将显示在这里");
+    gtk_label_set_text(result_label, "-");
+    gtk_label_set_text(postfix_label, "-");
 }
 
 int main(int argc, char* argv[])
 {
     GtkWidget* window;
-    GtkWidget* grid;
+    GtkWidget* vbox; // 改为垂直盒子布局
+    GtkWidget* hbox; // 水平盒子布局用于按钮
     GtkWidget* entry;
     GtkWidget* calculate_btn;
     GtkWidget* clear_btn;
@@ -311,48 +326,58 @@ int main(int argc, char* argv[])
     // 创建主窗口
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(window), "算术表达式求值器");
-    gtk_window_set_default_size(GTK_WINDOW(window), 200, 300);
+    gtk_window_set_default_size(GTK_WINDOW(window), 400, 300);
     gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
-    gtk_container_set_border_width(GTK_CONTAINER(window), 10);
+    gtk_container_set_border_width(GTK_CONTAINER(window), 15);
 
-    // 创建网格布局
-    grid = gtk_grid_new();
-    gtk_grid_set_row_spacing(GTK_GRID(grid), 10);
-    gtk_grid_set_column_spacing(GTK_GRID(grid), 10);
-    gtk_container_add(GTK_CONTAINER(window), grid);
+    // 创建垂直盒子布局 - 更好的空间利用
+    vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
+    gtk_container_add(GTK_CONTAINER(window), vbox);
 
     // 创建标题
     title_label = gtk_label_new("算术表达式求值器");
-    gtk_grid_attach(GTK_GRID(grid), title_label, 0, 0, 2, 1);
+    gtk_box_pack_start(GTK_BOX(vbox), title_label, FALSE, FALSE, 0);
 
     // 创建输入标签和输入框
     input_label = gtk_label_new("请输入表达式:");
-    gtk_grid_attach(GTK_GRID(grid), input_label, 0, 1, 2, 1);
+    gtk_box_pack_start(GTK_BOX(vbox), input_label, FALSE, FALSE, 0);
 
     entry = gtk_entry_new();
-    gtk_grid_attach(GTK_GRID(grid), entry, 0, 2, 2, 1);
+    gtk_box_pack_start(GTK_BOX(vbox), entry, FALSE, FALSE, 0);
 
-    // 创建按钮
+    // 创建水平盒子用于按钮
+    hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
+    gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
+
     calculate_btn = gtk_button_new_with_label("计算");
     clear_btn = gtk_button_new_with_label("清空");
 
-    gtk_grid_attach(GTK_GRID(grid), calculate_btn, 0, 3, 1, 1);
-    gtk_grid_attach(GTK_GRID(grid), clear_btn, 1, 3, 1, 1);
+    gtk_box_pack_start(GTK_BOX(hbox), calculate_btn, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), clear_btn, TRUE, TRUE, 0);
 
     // 创建后缀表达式显示区域
     postfix_title_label = gtk_label_new("后缀表达式:");
-    gtk_grid_attach(GTK_GRID(grid), postfix_title_label, 0, 4, 2, 1);
+    gtk_box_pack_start(GTK_BOX(vbox), postfix_title_label, FALSE, FALSE, 0);
 
-    postfix_label = gtk_label_new("后缀表达式将显示在这里");
+    postfix_label = gtk_label_new("-");
     gtk_label_set_line_wrap(GTK_LABEL(postfix_label), TRUE);
-    gtk_grid_attach(GTK_GRID(grid), postfix_label, 0, 5, 2, 1);
+    gtk_label_set_selectable(GTK_LABEL(postfix_label), TRUE);
+
+    // 为标签添加边框使其更明显
+    GtkWidget* postfix_frame = gtk_frame_new(NULL);
+    gtk_container_add(GTK_CONTAINER(postfix_frame), postfix_label);
+    gtk_box_pack_start(GTK_BOX(vbox), postfix_frame, FALSE, FALSE, 0);
 
     // 创建结果显示区域
     result_title_label = gtk_label_new("计算结果:");
-    gtk_grid_attach(GTK_GRID(grid), result_title_label, 0, 6, 2, 1);
+    gtk_box_pack_start(GTK_BOX(vbox), result_title_label, FALSE, FALSE, 0);
 
-    result_label = gtk_label_new("结果将显示在这里");
-    gtk_grid_attach(GTK_GRID(grid), result_label, 0, 7, 2, 1);
+    result_label = gtk_label_new("-");
+    gtk_label_set_selectable(GTK_LABEL(result_label), TRUE);
+
+    GtkWidget* result_frame = gtk_frame_new(NULL);
+    gtk_container_add(GTK_CONTAINER(result_frame), result_label);
+    gtk_box_pack_start(GTK_BOX(vbox), result_frame, FALSE, FALSE, 0);
 
     // 存储需要传递的控件指针
     GtkWidget* widgets[3] = { entry, result_label, postfix_label };
