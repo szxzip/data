@@ -6,14 +6,14 @@
 #define TABLE_SIZE 100
 #define MAX_PHONE_LENGTH 12
 
-// 节点
+// （链式）数据节点
 typedef struct HashNode {
     char phone[MAX_PHONE_LENGTH];
     char name[50];
     struct HashNode* next;
 } HashNode;
 
-// 哈希表结构
+// (顺序）哈希表结构。下标即为哈希。
 typedef struct {
     HashNode** buckets; // 节点
     int size; // 哈希字节数
@@ -30,13 +30,21 @@ GtkWidget* result_text;
 GtkWidget* asl_label;
 
 // 计算字符串哈希
+/*
+ * unsigned int hash_function(const char* phone)
+ * {
+ *     unsigned int hash = 0;
+ *     while (*phone) { // 指针移动
+ *         hash = (hash * 31) + *phone++; // 按位幂乗后相加
+ *     }
+ *     return hash % TABLE_SIZE; // 取余以固定范围
+ * }
+ *
+ */
+
 unsigned int hash_function(const char* phone)
 {
-    unsigned int hash = 0;
-    while (*phone) { // 指针移动
-        hash = (hash * 31) + *phone++; // 按位幂乗后相加
-    }
-    return hash % TABLE_SIZE; // 取余以固定范围
+    return (phone[10] - '0') % 10; // 只取最后一位，字符转数字；相同数字结尾都会冲突
 }
 
 // 创建哈希表
